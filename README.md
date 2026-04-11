@@ -5,6 +5,8 @@
 # CashPilot for Home Assistant
 
 [![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![Tests](https://github.com/GeiserX/cashpilot-ha/actions/workflows/tests.yml/badge.svg)](https://github.com/GeiserX/cashpilot-ha/actions/workflows/tests.yml)
+[![codecov](https://codecov.io/gh/GeiserX/cashpilot-ha/graph/badge.svg)](https://codecov.io/gh/GeiserX/cashpilot-ha)
 [![GitHub Release](https://img.shields.io/github/v/release/GeiserX/cashpilot-ha)](https://github.com/GeiserX/cashpilot-ha/releases)
 [![GitHub Stars](https://img.shields.io/github/stars/GeiserX/cashpilot-ha)](https://github.com/GeiserX/cashpilot-ha)
 [![License: GPL-3.0](https://img.shields.io/github/license/GeiserX/cashpilot-ha)](LICENSE)
