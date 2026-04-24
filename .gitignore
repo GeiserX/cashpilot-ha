@@ -17,3 +17,5 @@ venv/
 *.swo
 *~
 .DS_Store
+.coverage
+htmlcov/
