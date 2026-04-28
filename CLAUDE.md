@@ -1,4 +1,4 @@
-# AGENTS.md — CashPilot HA
+# CLAUDE.md — CashPilot HA
 
 ## Project Overview
 
