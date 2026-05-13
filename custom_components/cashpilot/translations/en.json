@@ -14,15 +14,25 @@
           "username": "Your CashPilot login username.",
           "password": "Your CashPilot login password."
         }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate with CashPilot",
+        "description": "Your session has expired or credentials have changed. Please enter your updated credentials.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect to CashPilot. Check the URL and ensure the server is reachable.",
       "invalid_auth": "Invalid username or password.",
+      "insufficient_permissions": "The user does not have sufficient permissions. Use an owner account.",
       "unknown": "An unexpected error occurred."
     },
     "abort": {
-      "already_configured": "This CashPilot instance is already configured."
+      "already_configured": "This CashPilot instance is already configured.",
+      "reauth_successful": "Re-authentication successful."
     }
   },
   "entity": {

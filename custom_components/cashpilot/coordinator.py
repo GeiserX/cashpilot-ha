@@ -13,7 +13,12 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .api import CashPilotClient, CashPilotAuthError, CashPilotError
+from .api import (
+    CashPilotAuthError,
+    CashPilotClient,
+    CashPilotError,
+    CashPilotPermissionError,
+)
 from .const import (
     DATA_BREAKDOWN,
     DATA_FLEET,
@@ -57,7 +62,15 @@ class CashPilotCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             health = await self.client.async_get_health_scores()
             fleet = await self.client.async_get_fleet_summary()
         except CashPilotAuthError as err:
+            if getattr(self, "config_entry", None):
+                self.config_entry.async_start_reauth(self.hass)
             raise UpdateFailed(f"Authentication failed: {err}") from err
+        except CashPilotPermissionError as err:
+            if getattr(self, "config_entry", None):
+                self.config_entry.async_start_reauth(self.hass)
+            raise UpdateFailed(
+                f"Insufficient permissions: {err}"
+            ) from err
         except CashPilotError as err:
             raise UpdateFailed(f"Error fetching CashPilot data: {err}") from err
 

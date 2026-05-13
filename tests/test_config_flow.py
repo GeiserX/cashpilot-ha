@@ -12,6 +12,7 @@ from custom_components.cashpilot.api import (
     CashPilotClient,
     CashPilotConnectionError,
     CashPilotError,
+    CashPilotPermissionError,
 )
 from custom_components.cashpilot.config_flow import CashPilotConfigFlow
 from custom_components.cashpilot.const import (
@@ -240,3 +241,229 @@ async def test_step_user_auth_error_on_summary():
 
     assert result["type"] == "form"
     assert result["errors"]["base"] == "invalid_auth"
+
+
+# ---------------------------------------------------------------------------
+# async_step_user: insufficient permissions
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_step_user_permission_error():
+    """Permission error during summary fetch shows insufficient_permissions."""
+    flow = CashPilotConfigFlow()
+
+    user_input = {
+        CONF_URL: "http://cashpilot:8080",
+        CONF_USERNAME: "viewer",
+        CONF_PASSWORD: "secret",
+    }
+
+    with patch("custom_components.cashpilot.config_flow.aiohttp.ClientSession") as mock_session_cls:
+        mock_session = AsyncMock()
+        mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("custom_components.cashpilot.config_flow.CashPilotClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.async_login = AsyncMock()
+            mock_client.async_get_earnings_summary = AsyncMock(
+                side_effect=CashPilotPermissionError("forbidden")
+            )
+            mock_client_cls.return_value = mock_client
+
+            result = await flow.async_step_user(user_input=user_input)
+
+    assert result["type"] == "form"
+    assert result["errors"]["base"] == "insufficient_permissions"
+
+
+# ---------------------------------------------------------------------------
+# async_step_reauth
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_step_reauth_shows_confirm_form():
+    """Reauth step shows the reauth_confirm form."""
+    flow = CashPilotConfigFlow()
+    flow.context = {"entry_id": "test_entry"}
+
+    mock_entry = MagicMock()
+    mock_entry.data = {CONF_URL: "http://cashpilot:8080", CONF_USERNAME: "admin", CONF_PASSWORD: "old"}
+    mock_entry.entry_id = "test_entry"
+
+    flow.hass = MagicMock()
+    flow.hass.config_entries.async_get_entry.return_value = mock_entry
+
+    result = await flow.async_step_reauth(entry_data={})
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+
+@pytest.mark.asyncio
+async def test_step_reauth_confirm_success():
+    """Successful reauth updates entry and aborts with reauth_successful."""
+    flow = CashPilotConfigFlow()
+    flow.context = {"entry_id": "test_entry"}
+
+    mock_entry = MagicMock()
+    mock_entry.data = {CONF_URL: "http://cashpilot:8080", CONF_USERNAME: "admin", CONF_PASSWORD: "old"}
+    mock_entry.entry_id = "test_entry"
+
+    flow.hass = MagicMock()
+    flow.hass.config_entries.async_get_entry.return_value = mock_entry
+    flow.hass.config_entries.async_reload = AsyncMock()
+
+    # First call sets up reauth entry
+    await flow.async_step_reauth(entry_data={})
+
+    user_input = {CONF_USERNAME: "admin", CONF_PASSWORD: "newpass"}
+
+    with patch("custom_components.cashpilot.config_flow.aiohttp.ClientSession") as mock_session_cls:
+        mock_session = AsyncMock()
+        mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("custom_components.cashpilot.config_flow.CashPilotClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.async_login = AsyncMock()
+            mock_client.async_get_earnings_summary = AsyncMock(return_value={})
+            mock_client_cls.return_value = mock_client
+
+            result = await flow.async_step_reauth_confirm(user_input=user_input)
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "reauth_successful"
+    flow.hass.config_entries.async_update_entry.assert_called_once()
+    flow.hass.config_entries.async_reload.assert_called_once_with("test_entry")
+
+
+@pytest.mark.asyncio
+async def test_step_reauth_confirm_auth_error():
+    """Auth error during reauth shows invalid_auth."""
+    flow = CashPilotConfigFlow()
+    flow.context = {"entry_id": "test_entry"}
+
+    mock_entry = MagicMock()
+    mock_entry.data = {CONF_URL: "http://cashpilot:8080", CONF_USERNAME: "admin", CONF_PASSWORD: "old"}
+    mock_entry.entry_id = "test_entry"
+
+    flow.hass = MagicMock()
+    flow.hass.config_entries.async_get_entry.return_value = mock_entry
+
+    await flow.async_step_reauth(entry_data={})
+
+    user_input = {CONF_USERNAME: "admin", CONF_PASSWORD: "wrong"}
+
+    with patch("custom_components.cashpilot.config_flow.aiohttp.ClientSession") as mock_session_cls:
+        mock_session = AsyncMock()
+        mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("custom_components.cashpilot.config_flow.CashPilotClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.async_login = AsyncMock(
+                side_effect=CashPilotAuthError("bad creds")
+            )
+            mock_client_cls.return_value = mock_client
+
+            result = await flow.async_step_reauth_confirm(user_input=user_input)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == "invalid_auth"
+
+
+@pytest.mark.asyncio
+async def test_step_reauth_confirm_connection_error():
+    """Connection error during reauth shows cannot_connect."""
+    flow = CashPilotConfigFlow()
+    flow.context = {"entry_id": "test_entry"}
+
+    mock_entry = MagicMock()
+    mock_entry.data = {CONF_URL: "http://cashpilot:8080", CONF_USERNAME: "admin", CONF_PASSWORD: "old"}
+    mock_entry.entry_id = "test_entry"
+
+    flow.hass = MagicMock()
+    flow.hass.config_entries.async_get_entry.return_value = mock_entry
+
+    await flow.async_step_reauth(entry_data={})
+
+    user_input = {CONF_USERNAME: "admin", CONF_PASSWORD: "secret"}
+
+    with patch("custom_components.cashpilot.config_flow.aiohttp.ClientSession") as mock_session_cls:
+        mock_session = AsyncMock()
+        mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("custom_components.cashpilot.config_flow.CashPilotClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.async_login = AsyncMock(
+                side_effect=CashPilotConnectionError("unreachable")
+            )
+            mock_client_cls.return_value = mock_client
+
+            result = await flow.async_step_reauth_confirm(user_input=user_input)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == "cannot_connect"
+
+
+@pytest.mark.asyncio
+async def test_step_reauth_confirm_permission_error():
+    """Permission error during reauth shows insufficient_permissions."""
+    flow = CashPilotConfigFlow()
+    flow.context = {"entry_id": "test_entry"}
+
+    mock_entry = MagicMock()
+    mock_entry.data = {CONF_URL: "http://cashpilot:8080", CONF_USERNAME: "admin", CONF_PASSWORD: "old"}
+    mock_entry.entry_id = "test_entry"
+
+    flow.hass = MagicMock()
+    flow.hass.config_entries.async_get_entry.return_value = mock_entry
+
+    await flow.async_step_reauth(entry_data={})
+
+    user_input = {CONF_USERNAME: "viewer", CONF_PASSWORD: "secret"}
+
+    with patch("custom_components.cashpilot.config_flow.aiohttp.ClientSession") as mock_session_cls:
+        mock_session = AsyncMock()
+        mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("custom_components.cashpilot.config_flow.CashPilotClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.async_login = AsyncMock()
+            mock_client.async_get_earnings_summary = AsyncMock(
+                side_effect=CashPilotPermissionError("forbidden")
+            )
+            mock_client_cls.return_value = mock_client
+
+            result = await flow.async_step_reauth_confirm(user_input=user_input)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == "insufficient_permissions"
+
+
+@pytest.mark.asyncio
+async def test_step_reauth_confirm_no_input_shows_form():
+    """Reauth confirm with no input shows form."""
+    flow = CashPilotConfigFlow()
+    flow.context = {"entry_id": "test_entry"}
+
+    mock_entry = MagicMock()
+    mock_entry.data = {CONF_URL: "http://cashpilot:8080", CONF_USERNAME: "admin", CONF_PASSWORD: "old"}
+    mock_entry.entry_id = "test_entry"
+
+    flow.hass = MagicMock()
+    flow.hass.config_entries.async_get_entry.return_value = mock_entry
+
+    await flow.async_step_reauth(entry_data={})
+    result = await flow.async_step_reauth_confirm(user_input=None)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
