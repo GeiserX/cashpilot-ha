@@ -13,6 +13,7 @@ from custom_components.cashpilot.api import (
     CashPilotClient,
     CashPilotConnectionError,
     CashPilotError,
+    CashPilotPermissionError,
 )
 
 
@@ -187,20 +188,15 @@ async def test_request_401_after_retry_raises():
 
 
 @pytest.mark.asyncio
-async def test_request_403_retries():
-    """403 also triggers re-login retry."""
+async def test_request_403_raises_permission_error():
+    """403 raises CashPilotPermissionError immediately (no retry)."""
     async with aiohttp.ClientSession() as session:
         client = CashPilotClient(session, BASE_URL, "admin", "pass")
-        client._cookies = {"session": "expired"}
+        client._cookies = {"session": "valid"}
         with aioresponses() as m:
             m.get(f"{BASE_URL}/api/earnings/summary", status=403)
-            m.post(f"{BASE_URL}/login", status=200)
-            m.get(
-                f"{BASE_URL}/api/earnings/summary",
-                payload={"total": 5.0},
-            )
-            result = await client.async_get_earnings_summary()
-            assert result == {"total": 5.0}
+            with pytest.raises(CashPilotPermissionError, match="Insufficient permissions"):
+                await client.async_get_earnings_summary()
 
 
 @pytest.mark.asyncio
