@@ -328,6 +328,7 @@ async def test_step_reauth_confirm_success():
         with patch("custom_components.cashpilot.config_flow.CashPilotClient") as mock_client_cls:
             mock_client = AsyncMock()
             mock_client.async_login = AsyncMock()
+            mock_client.async_get_earnings_summary = AsyncMock(return_value={})
             mock_client_cls.return_value = mock_client
 
             result = await flow.async_step_reauth_confirm(user_input=user_input)
@@ -408,6 +409,43 @@ async def test_step_reauth_confirm_connection_error():
     assert result["type"] == "form"
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]["base"] == "cannot_connect"
+
+
+@pytest.mark.asyncio
+async def test_step_reauth_confirm_permission_error():
+    """Permission error during reauth shows insufficient_permissions."""
+    flow = CashPilotConfigFlow()
+    flow.context = {"entry_id": "test_entry"}
+
+    mock_entry = MagicMock()
+    mock_entry.data = {CONF_URL: "http://cashpilot:8080", CONF_USERNAME: "admin", CONF_PASSWORD: "old"}
+    mock_entry.entry_id = "test_entry"
+
+    flow.hass = MagicMock()
+    flow.hass.config_entries.async_get_entry.return_value = mock_entry
+
+    await flow.async_step_reauth(entry_data={})
+
+    user_input = {CONF_USERNAME: "viewer", CONF_PASSWORD: "secret"}
+
+    with patch("custom_components.cashpilot.config_flow.aiohttp.ClientSession") as mock_session_cls:
+        mock_session = AsyncMock()
+        mock_session_cls.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("custom_components.cashpilot.config_flow.CashPilotClient") as mock_client_cls:
+            mock_client = AsyncMock()
+            mock_client.async_login = AsyncMock()
+            mock_client.async_get_earnings_summary = AsyncMock(
+                side_effect=CashPilotPermissionError("forbidden")
+            )
+            mock_client_cls.return_value = mock_client
+
+            result = await flow.async_step_reauth_confirm(user_input=user_input)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == "insufficient_permissions"
 
 
 @pytest.mark.asyncio

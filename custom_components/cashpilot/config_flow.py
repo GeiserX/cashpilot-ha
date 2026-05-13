@@ -108,8 +108,11 @@ class CashPilotConfigFlow(ConfigFlow, domain=DOMAIN):
                 async with aiohttp.ClientSession() as session:
                     client = CashPilotClient(session, url, username, password)
                     await client.async_login()
+                    await client.async_get_earnings_summary()
             except CashPilotConnectionError:
                 errors["base"] = "cannot_connect"
+            except CashPilotPermissionError:
+                errors["base"] = "insufficient_permissions"
             except CashPilotAuthError:
                 errors["base"] = "invalid_auth"
             except Exception:
