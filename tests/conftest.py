@@ -31,12 +31,17 @@ class _FakeDataUpdateCoordinator:
         self.name = name
         self.update_interval = update_interval
         self.data: dict[str, Any] = {}
+        self._listeners: list = []
 
     async def async_config_entry_first_refresh(self):
         pass
 
     async def async_request_refresh(self):
         pass
+
+    def async_add_listener(self, listener):
+        self._listeners.append(listener)
+        return lambda: self._listeners.remove(listener)
 
     def __class_getitem__(cls, item):
         return cls
@@ -46,7 +51,8 @@ class _FakeConfigFlow:
     """Minimal stand-in for ConfigFlow."""
 
     def __init__(self, *args, **kwargs):
-        pass
+        self.context = {}
+        self.hass = None
 
     def __init_subclass__(cls, *, domain=None, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -63,6 +69,9 @@ class _FakeConfigFlow:
 
     def async_show_form(self, *, step_id, data_schema, errors=None):
         return {"type": "form", "step_id": step_id, "errors": errors or {}}
+
+    def async_abort(self, *, reason):
+        return {"type": "abort", "reason": reason}
 
 
 class _FakeDeviceInfo(dict):

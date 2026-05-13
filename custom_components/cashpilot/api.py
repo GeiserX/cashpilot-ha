@@ -22,6 +22,10 @@ class CashPilotAuthError(CashPilotError):
     """Raised when authentication fails."""
 
 
+class CashPilotPermissionError(CashPilotError):
+    """Raised when the user lacks sufficient permissions."""
+
+
 class CashPilotClient:
     """Async client for communicating with a CashPilot instance."""
 
@@ -94,7 +98,11 @@ class CashPilotClient:
                     return await self._request(
                         method, path, retry_auth=False
                     )
-                if resp.status in (401, 403):
+                if resp.status == 403:
+                    raise CashPilotPermissionError(
+                        "Insufficient permissions"
+                    )
+                if resp.status == 401:
                     raise CashPilotAuthError("Authentication failed")
                 resp.raise_for_status()
                 return await resp.json()

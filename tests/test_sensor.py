@@ -519,3 +519,40 @@ def test_service_memory_empty_string():
     coord = make_mock_coordinator(data=data)
     s = CashPilotServiceMemorySensor(coord, ENTRY_ID, "test", "Test")
     assert s.native_value is None
+
+
+# ---------------------------------------------------------------------------
+# Dynamic service discovery
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_dynamic_service_discovery():
+    """New services added after setup trigger entity creation."""
+    data = make_coordinator_data(
+        summary=MOCK_SUMMARY,
+        services=[MOCK_SERVICES[0]],  # Only honeygain initially
+    )
+    coord = make_mock_coordinator(data=data)
+    hass = MagicMock()
+    hass.data = {DOMAIN: {ENTRY_ID: coord}}
+    entry = MagicMock()
+    entry.entry_id = ENTRY_ID
+
+    added = []
+    async_add_entities = MagicMock(side_effect=lambda entities: added.extend(entities))
+
+    await async_setup_entry(hass, entry, async_add_entities)
+
+    # Initially: 4 dashboard + 5 per-service (honeygain only) = 9
+    assert len(added) == 9
+
+    # Simulate new service appearing in coordinator data
+    coord.data[DATA_SERVICES] = list(MOCK_SERVICES)  # Now includes earnapp
+
+    # Trigger the listener
+    assert len(coord._listeners) == 1
+    coord._listeners[0]()
+
+    # 5 new sensors for earnapp
+    assert len(added) == 14

@@ -7,7 +7,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.cashpilot.api import CashPilotAuthError, CashPilotError
+from custom_components.cashpilot.api import (
+    CashPilotAuthError,
+    CashPilotError,
+    CashPilotPermissionError,
+)
 from custom_components.cashpilot.const import (
     DATA_BREAKDOWN,
     DATA_FLEET,
@@ -176,3 +180,63 @@ async def test_update_data_generic_error_raises_update_failed():
     coord = CashPilotCoordinator(hass, client)
     with pytest.raises(UpdateFailed, match="Error fetching"):
         await coord._async_update_data()
+
+
+@pytest.mark.asyncio
+async def test_update_data_permission_error_raises_update_failed():
+    """CashPilotPermissionError is wrapped in UpdateFailed."""
+    from homeassistant.helpers.update_coordinator import UpdateFailed
+
+    hass = MagicMock()
+    client = AsyncMock()
+    client.async_get_earnings_summary = AsyncMock(return_value={})
+    client.async_get_earnings_breakdown = AsyncMock(return_value=[])
+    client.async_get_deployed_services = AsyncMock(
+        side_effect=CashPilotPermissionError("forbidden")
+    )
+
+    coord = CashPilotCoordinator(hass, client)
+    with pytest.raises(UpdateFailed, match="Insufficient permissions"):
+        await coord._async_update_data()
+
+
+@pytest.mark.asyncio
+async def test_update_data_auth_error_triggers_reauth():
+    """CashPilotAuthError triggers reauth when config_entry is present."""
+    from homeassistant.helpers.update_coordinator import UpdateFailed
+
+    hass = MagicMock()
+    client = AsyncMock()
+    client.async_get_earnings_summary = AsyncMock(
+        side_effect=CashPilotAuthError("expired")
+    )
+
+    coord = CashPilotCoordinator(hass, client)
+    coord.config_entry = MagicMock()
+
+    with pytest.raises(UpdateFailed, match="Authentication failed"):
+        await coord._async_update_data()
+
+    coord.config_entry.async_start_reauth.assert_called_once_with(hass)
+
+
+@pytest.mark.asyncio
+async def test_update_data_permission_error_triggers_reauth():
+    """CashPilotPermissionError triggers reauth when config_entry is present."""
+    from homeassistant.helpers.update_coordinator import UpdateFailed
+
+    hass = MagicMock()
+    client = AsyncMock()
+    client.async_get_earnings_summary = AsyncMock(return_value={})
+    client.async_get_earnings_breakdown = AsyncMock(return_value=[])
+    client.async_get_deployed_services = AsyncMock(
+        side_effect=CashPilotPermissionError("forbidden")
+    )
+
+    coord = CashPilotCoordinator(hass, client)
+    coord.config_entry = MagicMock()
+
+    with pytest.raises(UpdateFailed, match="Insufficient permissions"):
+        await coord._async_update_data()
+
+    coord.config_entry.async_start_reauth.assert_called_once_with(hass)
