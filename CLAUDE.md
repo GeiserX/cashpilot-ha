@@ -3,6 +3,8 @@
 ## Overview
 Home Assistant custom integration that monitors a CashPilot passive income dashboard. Provides sensors for earnings, per-service health monitoring, and service control (start/stop/restart) directly from HA.
 
+- **Parent project:** [GeiserX/CashPilot](https://github.com/GeiserX/CashPilot)
+
 ## Tech Stack
 - Python (Home Assistant integration)
 - Home Assistant (2024.1.0+)
@@ -21,7 +23,12 @@ cp -r custom_components/cashpilot/ <ha-config>/custom_components/
 ```
 
 ## Architecture
-- `custom_components/cashpilot/` — HA integration package (config flow, sensors, switches, buttons)
+- `custom_components/cashpilot/` — HA integration package
+  - `__init__.py` — Setup and config entry
+  - `manifest.json` — HA integration manifest
+  - `sensor.py` — Sensor entities
+  - `config_flow.py` — UI configuration flow
+  - Switches and buttons for service control
 - `tests/` — Test suite
 - `hacs.json` — HACS integration metadata
 - `docs/` — Documentation and images
