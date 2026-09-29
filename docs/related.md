@@ -12,7 +12,6 @@
 | [CashPilot](https://github.com/GeiserX/CashPilot) | Self-hosted passive income platform with web UI for setup and earnings tracking |
 | [CashPilot-android](https://github.com/GeiserX/CashPilot-android) | Android monitoring agent for CashPilot passive income apps |
 | [cashpilot-mcp](https://github.com/GeiserX/cashpilot-mcp) | MCP Server for CashPilot passive income monitoring and fleet management |
-| [n8n-nodes-cashpilot](https://github.com/GeiserX/n8n-nodes-cashpilot) | n8n community node for CashPilot passive income monitoring |
 
 ## Other Home Assistant integrations by GeiserX
 

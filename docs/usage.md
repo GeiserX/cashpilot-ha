@@ -1,4 +1,4 @@
-# Entities
+# Usage
 
 ## Dashboard device
 
