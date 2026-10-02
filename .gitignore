@@ -19,3 +19,7 @@ venv/
 .DS_Store
 .coverage
 htmlcov/
+
+# Bead text lives in the Dolt tracker only, never in git
+.beads/issues.jsonl
+.beads/interactions.jsonl
