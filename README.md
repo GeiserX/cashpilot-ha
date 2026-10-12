@@ -12,6 +12,10 @@
 
 A Home Assistant custom integration that monitors your [CashPilot](https://github.com/GeiserX/CashPilot) passive income dashboard. Track earnings, service health, and manage containers directly from HA.
 
+<p align="center">
+  <img src="docs/images/device-page.png" alt="The CashPilot device page in Home Assistant: total, today and month earnings, active services, fleet workers and a Collect earnings button" width="700"/>
+</p>
+
 ## Features
 
 - **Earnings overview** -- total, today, and monthly earnings as sensors
