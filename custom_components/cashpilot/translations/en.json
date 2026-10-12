@@ -56,29 +56,24 @@
         "name": "Fleet containers running"
       },
       "service_balance": {
-        "name": "{service_name} balance"
+        "name": "Balance"
       },
       "service_health_score": {
-        "name": "{service_name} health score"
+        "name": "Health score"
       },
       "service_uptime": {
-        "name": "{service_name} uptime"
+        "name": "Uptime"
       },
       "service_cpu": {
-        "name": "{service_name} CPU"
+        "name": "CPU"
       },
       "service_memory": {
-        "name": "{service_name} memory"
+        "name": "Memory"
       }
     },
     "binary_sensor": {
       "service_running": {
-        "name": "{service_name} running"
-      }
-    },
-    "switch": {
-      "service_switch": {
-        "name": "{service_name}"
+        "name": "Running"
       }
     },
     "button": {
@@ -86,7 +81,7 @@
         "name": "Collect earnings"
       },
       "service_restart": {
-        "name": "{service_name} restart"
+        "name": "Restart"
       }
     }
   }

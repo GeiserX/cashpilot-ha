@@ -43,7 +43,9 @@ async def async_setup_entry(
 class CashPilotServiceSwitch(CashPilotServiceEntity, SwitchEntity):
     """Switch to start/stop a service."""
 
-    _attr_translation_key = "service_switch"
+    # The switch is the service's main feature, so it takes the device name
+    # alone ("Wipter", switch.wipter) instead of a name of its own.
+    _attr_name = None
     _attr_icon = "mdi:power"
 
     def __init__(

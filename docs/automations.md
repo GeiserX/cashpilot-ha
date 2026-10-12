@@ -25,7 +25,7 @@ automation:
   - alias: "CashPilot service down alert"
     trigger:
       - platform: state
-        entity_id: binary_sensor.cashpilot_honeygain_running
+        entity_id: binary_sensor.honeygain_running
         to: "off"
         for:
           minutes: 10
@@ -43,12 +43,12 @@ automation:
   - alias: "CashPilot auto-restart low health"
     trigger:
       - platform: numeric_state
-        entity_id: sensor.cashpilot_honeygain_health_score
+        entity_id: sensor.honeygain_health_score
         below: 50
         for:
           minutes: 15
     action:
       - service: button.press
         target:
-          entity_id: button.cashpilot_honeygain_restart
+          entity_id: button.honeygain_restart
 ```
