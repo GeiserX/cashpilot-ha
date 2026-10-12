@@ -8,7 +8,7 @@
 [![Tests](https://github.com/GeiserX/cashpilot-ha/actions/workflows/tests.yml/badge.svg)](https://github.com/GeiserX/cashpilot-ha/actions/workflows/tests.yml)
 [![License](https://img.shields.io/github/license/GeiserX/cashpilot-ha)](LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/GeiserX/cashpilot-ha)](https://github.com/GeiserX/cashpilot-ha)
-[![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![HACS](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 
 A Home Assistant custom integration that monitors your [CashPilot](https://github.com/GeiserX/CashPilot) passive income dashboard. Track earnings, service health, and manage containers directly from HA.
 
@@ -23,7 +23,10 @@ A Home Assistant custom integration that monitors your [CashPilot](https://githu
 
 ## Quick start
 
-1. In HACS, add `https://github.com/GeiserX/cashpilot-ha` as a custom repository with category **Integration**, install "CashPilot" and restart Home Assistant.
+1. In HACS, search for **CashPilot**, download it and restart Home Assistant. Or open it in HACS directly:
+
+   [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=GeiserX&repository=cashpilot-ha&category=integration)
+
 2. Go to **Settings > Devices & Services > Add Integration** and pick **CashPilot**.
 3. Enter the URL of your CashPilot instance (e.g., `http://cashpilot:8080`) and your CashPilot username and password.
 
