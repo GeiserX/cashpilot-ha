@@ -19,13 +19,15 @@
 
 ## Per-service devices (one device per deployed service)
 
+Each service gets a device named after it, and its entities take that name: the Honeygain device shows "Honeygain Balance" as `sensor.honeygain_balance`. In the table, `<service>` is the service name in lower case with spaces and punctuation turned into `_`.
+
 | Entity | Type | Description |
 |--------|------|-------------|
-| `sensor.cashpilot_{slug}_balance` | Sensor | Service balance (USD) |
-| `sensor.cashpilot_{slug}_health_score` | Sensor | Health score (0-100%) |
-| `sensor.cashpilot_{slug}_uptime` | Sensor | Uptime percentage |
-| `sensor.cashpilot_{slug}_cpu` | Sensor | CPU usage (diagnostic) |
-| `sensor.cashpilot_{slug}_memory` | Sensor | Memory usage in MB (diagnostic) |
-| `binary_sensor.cashpilot_{slug}_running` | Binary Sensor | Whether the container is running |
-| `switch.cashpilot_{slug}` | Switch | Start / stop the service |
-| `button.cashpilot_{slug}_restart` | Button | Restart the service |
+| `sensor.<service>_balance` | Sensor | Service balance (USD) |
+| `sensor.<service>_health_score` | Sensor | Health score (0-100%) |
+| `sensor.<service>_uptime` | Sensor | Uptime percentage |
+| `sensor.<service>_cpu` | Sensor | CPU usage (diagnostic) |
+| `sensor.<service>_memory` | Sensor | Memory usage in MB (diagnostic) |
+| `binary_sensor.<service>_running` | Binary Sensor | Whether the container is running |
+| `switch.<service>` | Switch | Start / stop the service |
+| `button.<service>_restart` | Button | Restart the service |
