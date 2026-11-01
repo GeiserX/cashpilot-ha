@@ -7,6 +7,29 @@ from types import ModuleType
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+import inspect
+
+import aioresponses.core
+from aiohttp import ClientResponse
+
+
+# ---------------------------------------------------------------------------
+# aiohttp 3.14 made ClientResponse.__init__ require a keyword-only
+# stream_writer argument. aioresponses 0.7.9 does not pass it, so every mocked
+# request fails with a TypeError. Until the upstream fix ships
+# (https://github.com/pnuckowski/aioresponses/pull/288), hand aioresponses a
+# subclass that supplies the same stand-in that fix uses. No-op on older aiohttp.
+# ---------------------------------------------------------------------------
+
+if "stream_writer" in inspect.signature(ClientResponse.__init__).parameters:
+
+    class _MockClientResponse(ClientResponse):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            kwargs.setdefault("stream_writer", MagicMock(output_size=0))
+            super().__init__(*args, **kwargs)
+
+    aioresponses.core.ClientResponse = _MockClientResponse
+
 
 # ---------------------------------------------------------------------------
 # Stub out homeassistant modules BEFORE any custom_components import
