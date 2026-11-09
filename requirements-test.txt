@@ -1,5 +1,5 @@
 pytest>=9.2.0
-pytest-asyncio>=1.4.1
+pytest-asyncio>=1.4.1.post1
 pytest-cov>=7.1.0
 # aiohttp is test-only here: Home Assistant ships the runtime aiohttp and
 # manifest.json must not list it (hassfest rejects it). 3.14.4 is the first
